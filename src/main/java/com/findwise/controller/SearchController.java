@@ -2,35 +2,37 @@ package com.findwise.controller;
 
 import com.findwise.engine.SearchEngineImpl;
 import com.findwise.entry.IndexEntry;
+import com.findwise.reader.DataReader;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
 public class SearchController {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SearchController.class);
+
     private final SearchEngineImpl searchEngine;
+    private final DataReader dataReader;
 
     @GetMapping(value = "search/{term}")
     public List<IndexEntry> searchTerm(@PathVariable String term) {
-        addExampleDocuments();
         List<IndexEntry> resultList = searchEngine.search(term);
-        displayExampleResult(resultList, term);
+        for (IndexEntry entry : resultList) {
+            LOGGER.info("Entry for query: \"{}\": Id: {}, score: {}", term, entry.getId(), entry.getScore());
+        }
         return resultList;
     }
 
+    @PostConstruct
     private void addExampleDocuments() {
-        searchEngine.indexListOfDocuments(List.of("the brown fox jumped over the brown dog", "the lazy brown dog sat in the corner", "the red fox bit the lazy dog"));
-    }
-
-    private void displayExampleResult(List<IndexEntry> resultList, String term) {
-        System.out.println("Result list for query: " + term);
-        for (IndexEntry indexEntry : resultList) {
-            System.out.println("Document Id: " + indexEntry.getId() + ", TF-IDF score: " + indexEntry.getScore());
-        }
+        searchEngine.indexListOfDocuments(dataReader.docsFromResources());
     }
 }

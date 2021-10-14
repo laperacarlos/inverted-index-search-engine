@@ -15,43 +15,28 @@ public class SearchEngineImpl implements SearchEngine {
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchEngineImpl.class);
     private final Map<String, Set<Entry>> indexMap = new HashMap<>();
     private final Map<String, String> docsMap = new HashMap<>();
-    private int corpusCounter = 0;
+    private int corpusSize = 0;
 
     public void indexListOfDocuments(List<String> docs) {
         for (String doc : docs) {
-            String id = UUID.randomUUID().toString();
-            indexDocument(id, doc);
-            docsMap.put(id, doc);
+            if (doc != null) {
+                String id = UUID.randomUUID().toString();
+                indexDocument(id, doc);
+                docsMap.put(id, doc);
+            }
         }
     }
 
     public void indexDocument(String id, String content) {
 
-        documentValidation(content, id);
+        if (isContentValid(content)) {
+            List<String> tokens = Collections.list(new StringTokenizer((content))).stream()
+                    .map(token -> (String) token)
+                    .collect(Collectors.toList());//TODO sprawdzić splita
+            parseTokens(id, tokens);
 
-        List<String> tokens = Collections.list(new StringTokenizer((content))).stream()
-                .map(token -> (String) token)
-                .collect(Collectors.toList());
-
-        for (String token : tokens) {
-
-            if (!indexMap.containsKey(token)) {
-
-                Set<Entry> entrySet = new HashSet<>();
-                entrySet.add(new Entry(id, calculateTf(tokens, token)));
-                indexMap.put(token, entrySet);
-                scoreActualization();
-
-            } else {
-                if (indexMap.get(token).stream().noneMatch(t -> id.equals(t.getId()))) {
-
-                    Set<Entry> entriesToUpdate = indexMap.get(token);
-                    entriesToUpdate.add(new Entry(id, calculateTf(tokens, token)));
-                    indexMap.replace(token, entriesToUpdate);
-                    scoreActualization();
-
-                }
-            }
+        } else {
+            LOGGER.info("Document with blank content, will not be taken for TF-IDF calculation. Document Id: " + id);
         }
     }
 
@@ -66,19 +51,44 @@ public class SearchEngineImpl implements SearchEngine {
         }
     }
 
-    private void documentValidation(String id, String content) {
-        if(content.isBlank()) {
-            LOGGER.info("Document with blank content. Id: " + id);
+    private boolean isContentValid(String content) {
+        return !content.isBlank();
+    }
+
+    private void parseTokens(String id, List<String> tokens) {
+        ++corpusSize;
+        for (String token : tokens) {
+            if (indexMap.containsKey(token)) {
+                tryUpdateToken(id, tokens, token);
+            } else {
+                insertToken(id, tokens, token);
+            }
         }
-        corpusCounter++;
+    }
+
+    private void tryUpdateToken(String id, List<String> tokens, String token) {
+        if (indexMap.get(token).stream().noneMatch(entry -> id.equals(entry.getId()))) {
+            Set<Entry> entriesToUpdate = indexMap.get(token);
+            double tf = calculateTf(tokens, token);
+            entriesToUpdate.add(new Entry(id, tf));
+            indexMap.replace(token, entriesToUpdate);
+            scoreActualization();
+        }
+    }
+
+    private void insertToken(String id, List<String> tokens, String token) {
+        Set<Entry> entrySet = new HashSet<>();
+        double tf = calculateTf(tokens, token);
+        entrySet.add(new Entry(id, tf));
+        indexMap.put(token, entrySet);
+        scoreActualization();
     }
 
     private void scoreActualization() {
         List<String> keyList = new ArrayList<>(indexMap.keySet());
-
         for (String key : keyList) {
             Set<Entry> entrySet = indexMap.get(key);
-            double idf = calculateIdf(corpusCounter, entrySet.size());
+            double idf = calculateIdf(corpusSize, entrySet.size());
             entrySet.forEach(entry -> entry.setScore(scoreCalculator(entry.getTfValue(), idf)));
             this.indexMap.replace(key, entrySet);
         }
@@ -92,7 +102,7 @@ public class SearchEngineImpl implements SearchEngine {
         int result = 0;
         for (String token : tokens) {
             if (term.equalsIgnoreCase(token)) {
-                result++;
+                ++result;
             }
         }
         return (double)result / tokens.size();
@@ -100,5 +110,9 @@ public class SearchEngineImpl implements SearchEngine {
 
     private double calculateIdf(int corpusSize, int docsWithTerm) {
         return Math.log10((double)corpusSize / docsWithTerm);
+    }
+
+    public int getCorpusSize() {
+        return corpusSize;
     }
 }
