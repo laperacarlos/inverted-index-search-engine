@@ -2,8 +2,6 @@ package com.findwise.engine;
 
 import com.findwise.entry.Entry;
 import com.findwise.entry.IndexEntry;
-import com.findwise.exception.InvalidDocumentContentException;
-import com.findwise.exception.InvalidDocumentIdException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -16,38 +14,44 @@ public class SearchEngineImpl implements SearchEngine {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchEngineImpl.class);
     private final Map<String, Set<Entry>> indexMap = new HashMap<>();
+    private final Map<String, String> docsMap = new HashMap<>();
     private int corpusCounter = 0;
 
+    public void indexListOfDocuments(List<String> docs) {
+        for (String doc : docs) {
+            String id = UUID.randomUUID().toString();
+            indexDocument(id, doc);
+            docsMap.put(id, doc);
+        }
+    }
+
     public void indexDocument(String id, String content) {
-        try {
-            documentValidation(id, content);
 
-            List<String> tokens = Collections.list(new StringTokenizer((content))).stream()
-                    .map(token -> (String) token)
-                    .collect(Collectors.toList());
+        documentValidation(content, id);
 
-            for (String token : tokens) {
+        List<String> tokens = Collections.list(new StringTokenizer((content))).stream()
+                .map(token -> (String) token)
+                .collect(Collectors.toList());
 
-                if (!indexMap.containsKey(token)) {
+        for (String token : tokens) {
 
-                    Set<Entry> entrySet = new HashSet<>();
-                    entrySet.add(new Entry(id, calculateTf(tokens, token)));
-                    indexMap.put(token, entrySet);
+            if (!indexMap.containsKey(token)) {
+
+                Set<Entry> entrySet = new HashSet<>();
+                entrySet.add(new Entry(id, calculateTf(tokens, token)));
+                indexMap.put(token, entrySet);
+                scoreActualization();
+
+            } else {
+                if (indexMap.get(token).stream().noneMatch(t -> id.equals(t.getId()))) {
+
+                    Set<Entry> entriesToUpdate = indexMap.get(token);
+                    entriesToUpdate.add(new Entry(id, calculateTf(tokens, token)));
+                    indexMap.replace(token, entriesToUpdate);
                     scoreActualization();
 
-                } else {
-                    if(indexMap.get(token).stream().noneMatch(t -> id.equals(t.getId()))) {
-
-                        Set<Entry> entriesToUpdate = indexMap.get(token);
-                        entriesToUpdate.add(new Entry(id, calculateTf(tokens, token)));
-                        indexMap.replace(token, entriesToUpdate);
-                        scoreActualization();
-
-                    }
                 }
             }
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
         }
     }
 
@@ -62,12 +66,9 @@ public class SearchEngineImpl implements SearchEngine {
         }
     }
 
-    private void documentValidation(String id, String content) throws Exception {
-        if(id.isBlank()) {
-            throw new InvalidDocumentIdException();
-        }
+    private void documentValidation(String id, String content) {
         if(content.isBlank()) {
-            throw new InvalidDocumentContentException(id);
+            LOGGER.info("Document with blank content. Id: " + id);
         }
         corpusCounter++;
     }
@@ -75,7 +76,7 @@ public class SearchEngineImpl implements SearchEngine {
     private void scoreActualization() {
         List<String> keyList = new ArrayList<>(indexMap.keySet());
 
-        for(String key : keyList) {
+        for (String key : keyList) {
             Set<Entry> entrySet = indexMap.get(key);
             double idf = calculateIdf(corpusCounter, entrySet.size());
             entrySet.forEach(entry -> entry.setScore(scoreCalculator(entry.getTfValue(), idf)));
@@ -90,7 +91,7 @@ public class SearchEngineImpl implements SearchEngine {
     private double calculateTf(List<String> tokens, String term) {
         int result = 0;
         for (String token : tokens) {
-            if(term.equalsIgnoreCase(token)) {
+            if (term.equalsIgnoreCase(token)) {
                 result++;
             }
         }

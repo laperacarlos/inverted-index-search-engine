@@ -17,7 +17,7 @@ public class SearchServiceTestSuite {
     private SearchEngineImpl searchService;
 
     @Test
-    void shallIndexAndSearchDocuments() {
+    void shouldIndexAndSearchDocuments() {
         //given
         searchService.indexDocument("id1", "the brown fox jumped over the brown dog");
         searchService.indexDocument("id2", "the lazy brown dog sat in the corner");
