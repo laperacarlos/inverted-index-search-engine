@@ -28,20 +28,16 @@ public class SearchEngineImpl implements SearchEngine {
     }
 
     public void indexDocument(String id, String content) {
-
         if (isContentValid(content)) {
-            List<String> tokens = Collections.list(new StringTokenizer((content))).stream()
-                    .map(token -> (String) token)
-                    .collect(Collectors.toList());//TODO sprawdzić splita
+            List<String> tokens = Arrays.asList(content.split("[\\s!.?:;]"));
             parseTokens(id, tokens);
-
         } else {
             LOGGER.info("Document with blank content, will not be taken for TF-IDF calculation. Document Id: " + id);
         }
     }
 
     public List<IndexEntry> search(String term) {
-        if(indexMap.containsKey(term)) {
+        if (indexMap.containsKey(term)) {
             List<IndexEntry> entryList = new ArrayList<>(indexMap.get(term));
             entryList.sort(Comparator.comparingDouble(IndexEntry::getScore).reversed());
             return entryList;
@@ -105,11 +101,11 @@ public class SearchEngineImpl implements SearchEngine {
                 ++result;
             }
         }
-        return (double)result / tokens.size();
+        return (double) result / tokens.size();
     }
 
     private double calculateIdf(int corpusSize, int docsWithTerm) {
-        return Math.log10((double)corpusSize / docsWithTerm);
+        return Math.log10((double) corpusSize / docsWithTerm);
     }
 
     public int getCorpusSize() {

@@ -21,7 +21,7 @@ public class DataReader {
 
     public List<String> docsFromResources() {
         try {
-            String doc1 = getResourceFileAsString("documents/doc1.txt");
+            String doc1 = getResourceFileAsString("documents/doc1.txt");//TODO check absolute path to file
             String doc2 = getResourceFileAsString("documents/doc2.txt");
             String doc3 = getResourceFileAsString("documents/doc3.txt");
             return List.of(Objects.requireNonNull(doc1), Objects.requireNonNull(doc2), Objects.requireNonNull(doc3));

@@ -17,7 +17,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.List;
 
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 @SpringJUnitWebConfig
@@ -37,10 +36,11 @@ public class SearchControllerTestSuite {
     void shouldGetListOfIndexEntries() throws Exception {
         //given
         List<IndexEntry> entries = List.of(new Entry("id1", 0.77));
+        List<String> list = List.of("jaźń");
 
 
         when(searchEngine.search("jaźń")).thenReturn(entries);
-        doNothing().when(dataReader.docsFromResources());
+        when(dataReader.docsFromResources()).thenReturn(list);
 
         //when@tehn
         mockMvc.perform(MockMvcRequestBuilders
