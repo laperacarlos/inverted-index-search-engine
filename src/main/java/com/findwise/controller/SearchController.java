@@ -2,7 +2,6 @@ package com.findwise.controller;
 
 import com.findwise.engine.SearchEngineImpl;
 import com.findwise.entry.IndexEntry;
-import com.findwise.reader.DataReader;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +19,6 @@ public class SearchController {
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchController.class);
 
     private final SearchEngineImpl searchEngine;
-    private final DataReader dataReader;
 
     @GetMapping(value = "search/{term}")
     public List<IndexEntry> searchTerm(@PathVariable String term) {
@@ -33,6 +31,6 @@ public class SearchController {
 
     @PostConstruct
     private void addExampleDocuments() {
-        searchEngine.indexListOfDocuments(dataReader.docsFromResources());
+        searchEngine.indexListOfDocuments(List.of("the brown fox jumped over the brown dog", "the lazy brown dog sat in the corner", "the red fox bit the lazy dog"));
     }
 }

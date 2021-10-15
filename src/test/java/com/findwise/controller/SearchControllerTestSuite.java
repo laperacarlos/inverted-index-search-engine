@@ -3,7 +3,6 @@ package com.findwise.controller;
 import com.findwise.engine.SearchEngineImpl;
 import com.findwise.entry.Entry;
 import com.findwise.entry.IndexEntry;
-import com.findwise.reader.DataReader;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,18 +28,12 @@ public class SearchControllerTestSuite {
     @MockBean
     private SearchEngineImpl searchEngine;
 
-    @MockBean
-    private DataReader dataReader;
-
     @Test
     void shouldGetListOfIndexEntries() throws Exception {
         //given
         List<IndexEntry> entries = List.of(new Entry("id1", 0.77));
-        List<String> list = List.of("jaźń");
-
 
         when(searchEngine.search("jaźń")).thenReturn(entries);
-        when(dataReader.docsFromResources()).thenReturn(list);
 
         //when@tehn
         mockMvc.perform(MockMvcRequestBuilders
