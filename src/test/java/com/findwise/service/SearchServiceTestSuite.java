@@ -2,19 +2,23 @@ package com.findwise.service;
 
 import com.findwise.engine.SearchEngineImpl;
 import com.findwise.entry.IndexEntry;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+//TODO add more unit tests (without Spring context)
+
 public class SearchServiceTestSuite {
 
-    @Autowired
     private SearchEngineImpl searchEngine;
+
+    @BeforeEach
+    void createEngine() {
+        searchEngine = new SearchEngineImpl();
+    }
 
     @Test
     void shouldIndexAndSearchDocuments() {

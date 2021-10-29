@@ -88,7 +88,7 @@ public class SearchEngineImpl implements SearchEngine {
             this.indexMap.replace(key, entrySet);
         }
     }
-
+//TODO calculations in new service
     private double scoreCalculator(double tf, double idf) {
         return tf * idf;
     }
@@ -103,6 +103,7 @@ public class SearchEngineImpl implements SearchEngine {
         return (double) result / tokens.size();
     }
 
+//TODO check sorting while docsWithTerm=0 & docsWithTerm=corpusSize
     private double calculateIdf(int corpusSize, int docsWithTerm) {
         return Math.log10((double) corpusSize / docsWithTerm);
     }

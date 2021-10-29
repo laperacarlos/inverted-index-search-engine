@@ -5,8 +5,9 @@ import com.findwise.entry.IndexEntry;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.PostConstruct;
@@ -20,8 +21,8 @@ public class SearchController {
 
     private final SearchEngineImpl searchEngine;
 
-    @GetMapping(value = "search/{term}")
-    public List<IndexEntry> searchTerm(@PathVariable String term) {
+    @GetMapping(value = "search")
+    public List<IndexEntry> searchTerm(@RequestParam("q") String term) {
         List<IndexEntry> resultList = searchEngine.search(term);
         for (IndexEntry entry : resultList) {
             LOGGER.info("Entry for query: \"{}\": Id: {}, score: {}", term, entry.getId(), entry.getScore());

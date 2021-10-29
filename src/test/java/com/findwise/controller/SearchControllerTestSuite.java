@@ -37,12 +37,11 @@ public class SearchControllerTestSuite {
 
         //when@tehn
         mockMvc.perform(MockMvcRequestBuilders
-                .get("/search/jaźń")
+                .get("/search?q=jaźń")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$", Matchers.hasSize(1)))
                 .andExpect(MockMvcResultMatchers.jsonPath("$[0].id", Matchers.is("id1")))
                 .andExpect(MockMvcResultMatchers.jsonPath("$[0].score", Matchers.is(0.0)));
     }
-
 }
