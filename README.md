@@ -15,10 +15,10 @@
 * After running the application, controller method `addExampleDocuments()` annotated `@PostConstruct` is adding example
   list of documents. List of documents is indexed by `SearchEngineImpl` method `indexListOfDocuments(List<String> docs)`
   .
-* Type url: http://localhost:8080/search/fox in your browser ("fox" is example query term, try your own) **OR**
+* Type url: http://localhost:8080/search?q=fox in your browser ("fox" is example query term, try your own) **OR**
   use `curl`:
   ```
-   curl http://localhost:8080/search/fox
+   curl http://localhost:8080/search?q=fox
   ```
   Result is a JSON file with the array of objects representing Entry class objects and logging info message in the
   console.
