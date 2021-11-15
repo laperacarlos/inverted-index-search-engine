@@ -20,7 +20,7 @@ import static org.mockito.Mockito.when;
 
 @SpringJUnitWebConfig
 @WebMvcTest(SearchController.class)
-public class SearchControllerTestSuite {
+public class SearchControllerTest {
 
     @Autowired
     private MockMvc mockMvc;

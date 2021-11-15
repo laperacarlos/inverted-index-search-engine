@@ -1,9 +1,11 @@
 package com.findwise.engine;
 
+import com.findwise.calculator.Calculator;
 import com.findwise.entry.Entry;
 import com.findwise.entry.IndexEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -15,14 +17,18 @@ public class SearchEngineImpl implements SearchEngine {
     private final Map<String, Set<Entry>> indexMap = new HashMap<>();
     private final Map<String, String> docsMap = new HashMap<>();
     private int corpusSize = 0;
+    private final Calculator calculator;
+
+    @Autowired
+    public SearchEngineImpl(Calculator calculator) {
+        this.calculator = calculator;
+    }
 
     public void indexListOfDocuments(List<String> docs) {
         for (String doc : docs) {
-            if (doc != null) {
-                String id = UUID.randomUUID().toString();
-                indexDocument(id, doc);
-                docsMap.put(id, doc);
-            }
+            String id = UUID.randomUUID().toString();
+            indexDocument(id, doc);
+            docsMap.put(id, doc);
         }
     }
 
@@ -31,7 +37,7 @@ public class SearchEngineImpl implements SearchEngine {
             List<String> tokens = Arrays.asList(content.split("[\\s!.?:;]"));
             parseTokens(id, tokens);
         } else {
-            LOGGER.info("Document with blank content, will not be taken for TF-IDF calculation. Document Id: " + id);
+            LOGGER.info("Document with blank content or \"null\" content, will not be taken for TF-IDF calculation. Document Id: " + id);
         }
     }
 
@@ -47,7 +53,7 @@ public class SearchEngineImpl implements SearchEngine {
     }
 
     private boolean isContentValid(String content) {
-        return !content.isBlank();
+        return content != null && !content.isBlank();
     }
 
     private void parseTokens(String id, List<String> tokens) {
@@ -64,7 +70,7 @@ public class SearchEngineImpl implements SearchEngine {
     private void tryUpdateToken(String id, List<String> tokens, String token) {
         if (indexMap.get(token).stream().noneMatch(entry -> id.equals(entry.getId()))) {
             Set<Entry> entriesToUpdate = indexMap.get(token);
-            double tf = calculateTf(tokens, token);
+            double tf = calculator.calculateTF(tokens, token);
             entriesToUpdate.add(new Entry(id, tf));
             indexMap.replace(token, entriesToUpdate);
             scoreActualization();
@@ -73,7 +79,7 @@ public class SearchEngineImpl implements SearchEngine {
 
     private void insertToken(String id, List<String> tokens, String token) {
         Set<Entry> entrySet = new HashSet<>();
-        double tf = calculateTf(tokens, token);
+        double tf = calculator.calculateTF(tokens, token);
         entrySet.add(new Entry(id, tf));
         indexMap.put(token, entrySet);
         scoreActualization();
@@ -83,29 +89,10 @@ public class SearchEngineImpl implements SearchEngine {
         List<String> keyList = new ArrayList<>(indexMap.keySet());
         for (String key : keyList) {
             Set<Entry> entrySet = indexMap.get(key);
-            double idf = calculateIdf(corpusSize, entrySet.size());
-            entrySet.forEach(entry -> entry.setScore(scoreCalculator(entry.getTfValue(), idf)));
+            int docsWithTerm = entrySet.size();
+            entrySet.forEach(entry -> entry.setScore(calculator.calculateTFIDFScore(entry.getTfValue(), corpusSize, docsWithTerm)));
             this.indexMap.replace(key, entrySet);
         }
-    }
-//TODO calculations in new service
-    private double scoreCalculator(double tf, double idf) {
-        return tf * idf;
-    }
-
-    private double calculateTf(List<String> tokens, String term) {
-        int result = 0;
-        for (String token : tokens) {
-            if (term.equalsIgnoreCase(token)) {
-                ++result;
-            }
-        }
-        return (double) result / tokens.size();
-    }
-
-//TODO check sorting while docsWithTerm=0 & docsWithTerm=corpusSize
-    private double calculateIdf(int corpusSize, int docsWithTerm) {
-        return Math.log10((double) corpusSize / docsWithTerm);
     }
 
     public int getCorpusSize() {

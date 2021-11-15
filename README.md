@@ -14,7 +14,8 @@
 
 * After running the application, controller method `addExampleDocuments()` annotated `@PostConstruct` is adding example
   list of documents. List of documents is indexed by `SearchEngineImpl` method `indexListOfDocuments(List<String> docs)`
-  .
+  . IDF value is calculated using smooth weighting scheme. Each of documents is stored in memory using HashMap<>()
+  implementation `Map<String, String> docsMap`.
 * Type url: http://localhost:8080/search?q=fox in your browser ("fox" is example query term, try your own) **OR**
   use `curl`:
   ```
@@ -44,4 +45,4 @@
 
 ## Notes
 
-Error in example description: search "fox" shall return the list in different order: [document3, document1].
+* Error in example description: search "fox" shall return the list in different order: [document3, document1].
